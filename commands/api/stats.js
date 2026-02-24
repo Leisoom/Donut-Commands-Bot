@@ -10,8 +10,14 @@ module.exports = {
 
     async execute(interaction) {
         const user = interaction.options.getString('user')
+
         try {
-            const response = await api.get(`/stats/${user}`, {
+
+            let response = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${user}/`);
+            
+            const uuid = response.data.id;
+
+            response = await api.get(`/stats/${user}`, {
                 headers: {
                     'Authorization': `Bearer ${process.env.DONUT_SMP_API_KEY}`
                 }
@@ -25,8 +31,8 @@ module.exports = {
             }).format(money);
 
             const embed = new EmbedBuilder()
-                .setTitle(user)
-                .setDescription(`${user}'s stats`)
+                .setTitle(`${user}'s stats`)
+                .setThumbnail(`https://visage.surgeplay.com/face/250/${uuid}`)
                 .setColor(0x5865F2)
                 .addFields(
                     { name: 'Blocks Broken', value: response.data.result.broken_blocks, inline: false },
