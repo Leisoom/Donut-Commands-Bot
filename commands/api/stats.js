@@ -10,11 +10,21 @@ module.exports = {
 
     async execute(interaction) {
 
-        const user = interaction.options.getString('user')
+        const user = interaction.options.getString('user');
+
+        let isOnline = false;
+
+        const lookup = await api.get(`/lookup/${user}`, {
+            headers: { Authorization: `Bearer ${process.env.DONUT_SMP_API_KEY}` }
+        }).catch(() => null);
+
+        if (lookup) isOnline = true;
 
         try {
             let response = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${user}/`);
             const uuid = response.data.id;
+
+            console.log(response)
 
             response = await api.get(`/stats/${user}`, {
                 headers: {
@@ -27,30 +37,35 @@ module.exports = {
                 currency: 'USD',
             }).format(response.data.result.money);
 
-const r = response.data.result;
+            const r = response.data.result;
 
-const exampleContainer = new ContainerBuilder()
-    .setAccentColor(0x0099ff)
-    .addSectionComponents(section =>
-        section
-            .addTextDisplayComponents(textDisplay => textDisplay.setContent(`### **${user}'s Stats**`))
-            .addTextDisplayComponents(textDisplay => textDisplay.setContent(`**Balance**: ${formatted}`))
-            .addTextDisplayComponents(textDisplay => textDisplay.setContent(`**Shards**: ${r.shards}`))
-            .setThumbnailAccessory(thumbnail =>
-                thumbnail
-                    .setURL(`https://visage.surgeplay.com/face/250/${uuid}`)
-                    .setDescription(`${user}'s avatar`)
-            )) 
-        .addSeparatorComponents((seperator) => seperator)
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: ${response.data.result.playtime}`))
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Kills**: ${response.data.result.kills}`))
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Deaths**: ${response.data.result.deaths}`))
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Mobs Killed**: ${response.data.result.mobs_killed}`))
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: ${response.data.result.money_made_from_sell}`))
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: ${response.data.result.money_spent_on_shop}`))
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed_Blocks**: ${response.data.result.placed_blocks}`))
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Brocken**: ${response.data.result.broken_blocks}`));
+            let playerStatus = isOnline ? "Online" : "Offine";
 
+            const exampleContainer = new ContainerBuilder()
+                .setAccentColor(0x0099ff)
+                .addSectionComponents(section =>
+                    section
+                        .addTextDisplayComponents(textDisplay => textDisplay.setContent(`### ${user} is ${playerStatus}!`))
+                        .addTextDisplayComponents(textDisplay => textDisplay.setContent(`**Balance**: ${formatted}`))
+                        .addTextDisplayComponents(textDisplay => textDisplay.setContent(`**Shards**: ${r.shards}`))
+                        .setThumbnailAccessory(thumbnail =>
+                            thumbnail
+                                .setURL(`https://visage.surgeplay.com/face/250/${uuid}`)
+                                .setDescription(`${user}'s avatar`)
+                        )) 
+                    .addSeparatorComponents((seperator) => seperator)
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: ${response.data.result.playtime}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Kills**: ${response.data.result.kills}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Deaths**: ${response.data.result.deaths}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Mobs Killed**: ${response.data.result.mobs_killed}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: ${response.data.result.money_made_from_sell}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: ${response.data.result.money_spent_on_shop}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed_Blocks**: ${response.data.result.placed_blocks}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Brocken**: ${response.data.result.broken_blocks}`));
+
+                    if(isOnline){
+                        exampleContainer.addTextDisplayComponents((td) => td.setContent(`**Location**: ${lookup.data.result.location}`))
+                    }
 
             await interaction.reply({
                 components: [exampleContainer],
