@@ -14,23 +14,16 @@ module.exports = {
 
         let isOnline = false;
 
-        const lookup = await api.get(`/lookup/${user}`, {
-            headers: { Authorization: `Bearer ${process.env.DONUT_SMP_API_KEY}` }
-        }).catch(() => null);
+        const lookup = await api.get(`/lookup/${user}`).catch(() => null);
 
         if (lookup) isOnline = true;
 
         try {
+
             let response = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${user}/`);
             const uuid = response.data.id;
 
-            console.log(response)
-
-            response = await api.get(`/stats/${user}`, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.DONUT_SMP_API_KEY}`
-                }
-            });
+            response = await api.get(`/stats/${user}`);
 
             const formatted = new Intl.NumberFormat('en-US', {
                 style: 'currency',
@@ -41,7 +34,7 @@ module.exports = {
 
             let playerStatus = isOnline ? "Online" : "Offine";
 
-            const exampleContainer = new ContainerBuilder()
+            const statsContainer = new ContainerBuilder()
                 .setAccentColor(0x0099ff)
                 .addSectionComponents(section =>
                     section
@@ -68,7 +61,7 @@ module.exports = {
                     }
 
             await interaction.reply({
-                components: [exampleContainer],
+                components: [statsContainer],
                 flags: MessageFlags.IsComponentsV2,
             });
 
