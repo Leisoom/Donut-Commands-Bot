@@ -1,5 +1,5 @@
 const api = require('../../src/utils/api');
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, ContainerBuilder, MessageFlags } = require('discord.js');
 const axios = require('axios');
 
 module.exports = {
@@ -9,12 +9,11 @@ module.exports = {
 	    .addStringOption((option) => option.setName('user').setDescription('The user to check stats of').setRequired(true)),
 
     async execute(interaction) {
+
         const user = interaction.options.getString('user')
 
         try {
-
             let response = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${user}/`);
-            
             const uuid = response.data.id;
 
             response = await api.get(`/stats/${user}`, {
@@ -23,33 +22,29 @@ module.exports = {
                 }
             });
 
-            const money = response.data.result.money;
-
             const formatted = new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
-            }).format(money);
+            }).format(response.data.result.money);
 
-            const embed = new EmbedBuilder()
-                .setTitle(`${user}'s stats`)
-                .setThumbnail(`https://visage.surgeplay.com/face/250/${uuid}`)
-                .setColor(0x5865F2)
-                .addFields(
-                    { name: 'Blocks Broken', value: response.data.result.broken_blocks, inline: false },
-                    { name: 'Deaths', value: response.data.result.deaths, inline: false },
-                    { name: 'Kills', value: response.data.result.kills, inline: false },
-                    { name: 'Mobs Killed', value: response.data.result.mobs_killed, inline: false },
-                    { name: 'Money', value: formatted, inline: false },
-                    { name: 'Money Made From Sell', value: response.data.result.money_made_from_sell, inline: false },
-                    { name: 'Money Spent on Shop', value: response.data.result.money_spent_on_shop, inline: false },
-                    { name: 'Placed_Blocks', value: response.data.result.placed_blocks, inline: false },
-                    { name: 'Playtime', value: response.data.result.playtime, inline: false },
-                    { name: 'Shards', value: response.data.result.shards, inline: false },
-                )
-                .setFooter({ text: 'Requested via slash command' })
-                .setTimestamp();
-
-            await interaction.reply({ embeds: [embed] });
+            const exampleContainer = new ContainerBuilder()
+                .setAccentColor(0x0099ff)
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${user}'s Stats**`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Broken**: ${response.data.result.broken_blocks}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Deaths**: ${response.data.result.deaths}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Kills**: ${response.data.result.kills}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Mobs Killed**: ${response.data.result.mobs_killed}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money**: ${formatted}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: ${response.data.result.money_made_from_sell}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: ${response.data.result.money_spent_on_shop}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed_Blocks**: ${response.data.result.placed_blocks}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: ${response.data.result.playtime}`))
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Shards**: ${response.data.result.shards}`))
+ 
+            await interaction.reply({
+                components: [exampleContainer],
+                flags: MessageFlags.IsComponentsV2,
+            });
 
         } catch (error) {
             console.error(error);
