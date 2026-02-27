@@ -39,8 +39,9 @@ async function fetchAuctionList(search) {
     return results;
 }
 
-async function getAuctionPage(results, start, stop){
+async function getAuctionPage(results, start, stop, pageNumber){
     const auctionTextDisplays = results.map((res) => new TextDisplayBuilder().setContent(res)).slice(start,stop)
+    const maxPageNumber = Math.ceil(results.length / 10)
 
     const previousButton = new ButtonBuilder()
             .setCustomId("previous_page")
@@ -65,7 +66,7 @@ async function getAuctionPage(results, start, stop){
 
     return new ContainerBuilder()
         .setAccentColor(0x0099ff)
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent("### Auction Listings"))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`### Auction Listings - Page ${pageNumber} of ${maxPageNumber}`))
         .addTextDisplayComponents(...auctionTextDisplays)
         .addSeparatorComponents((seperator) => seperator)
         .addActionRowComponents(row);
@@ -75,16 +76,17 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('auction')
         .setDescription('fetch auction house results')
-	    .addStringOption((option) => option.setName('search').setDescription('search term for AH')),
+	    .addStringOption((option) => option.setName('search').setDescription('search term for AH').setRequired(true)),
 
     async execute(interaction) {
         const search = interaction.options.getString('search');
         let start = 0;
         let stop = 10;
+        let pageNumber = 1;
         const auctionResults = await fetchAuctionList(search);
         try {
 
-            const auctionContainer = await getAuctionPage(auctionResults, start, stop);
+            const auctionContainer = await getAuctionPage(auctionResults, start, stop, pageNumber);
 
             const msg = await interaction.reply({
                 components: [auctionContainer],
@@ -102,14 +104,15 @@ module.exports = {
                 if (i.customId === "next_page") {
                     start = stop;
                     stop = stop + 10;
+                    pageNumber++;
                 } 
                 else if (i.customId === "previous_page") {
                     stop = start;
                     start = start - 10;
-
+                    pageNumber--;
                 }
 
-                const newPage = await getAuctionPage(auctionResults, start, stop);
+                const newPage = await getAuctionPage(auctionResults, start, stop, pageNumber);
 
                 await i.update({
                     components: [newPage],
