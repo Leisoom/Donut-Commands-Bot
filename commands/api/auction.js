@@ -57,7 +57,14 @@ async function fetchAuctionList(search,filter) {
     return results;
 }
 
-async function getAuctionPage(results, start, stop, pageNumber, filter){
+function getNoListingsContainer(search){
+    return new ContainerBuilder()
+        .setAccentColor(0xff0000)
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent("### No Listings Found"))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`Search: ${search}`))
+}
+
+function getAuctionPage(results, start, stop, pageNumber, filter){
     const auctionTextDisplays = results.map((res) => new TextDisplayBuilder().setContent(res)).slice(start,stop)
     const maxPageNumber = Math.ceil(results.length / 10)
 
@@ -131,7 +138,11 @@ module.exports = {
         try {
 
             let auctionResults = await fetchAuctionList(search, filter);
-            const auctionContainer = await getAuctionPage(auctionResults, start, stop, pageNumber);
+            let auctionContainer =  getAuctionPage(auctionResults, start, stop, pageNumber);
+
+           if(auctionResults.length === 0 ){
+                auctionContainer = getNoListingsContainer(interaction.options.getString('search'))
+           }
 
             const msg = await interaction.editReply({
                 components: [auctionContainer],
@@ -145,34 +156,34 @@ module.exports = {
 
             collector.on("collect", async (i) => {
 
-            if (i.customId === "next_page") {
-                start = stop;
-                stop += 10;
-                pageNumber++;
-            } 
-            else if (i.customId === "previous_page") {
-                stop = start;
-                start -= 10;
-                pageNumber--;
-            }
-            else if (i.customId === "sort_filter") {
-                start = 0;
-                stop = 10;
-                pageNumber = 1;
-                filter = i.values[0];
-                resort = true;
-            }
+                if (i.customId === "next_page") {
+                    start = stop;
+                    stop += 10;
+                    pageNumber++;
+                } 
+                else if (i.customId === "previous_page") {
+                    stop = start;
+                    start -= 10;
+                    pageNumber--;
+                }
+                else if (i.customId === "sort_filter") {
+                    start = 0;
+                    stop = 10;
+                    pageNumber = 1;
+                    filter = i.values[0];
+                    resort = true;
+                }
 
-            if (resort) {
-                auctionResults = await fetchAuctionList(search, filter);
-                resort = false;
-            }
+                if (resort) {
+                    auctionResults = await fetchAuctionList(search, filter);
+                    resort = false;
+                }
 
-            const newPage = await getAuctionPage(auctionResults, start, stop, pageNumber, filter);
+                const newPage = getAuctionPage(auctionResults, start, stop, pageNumber, filter);
 
-            await i.update({
-                components: [newPage],
-                flags: MessageFlags.IsComponentsV2
+                await i.update({
+                    components: [newPage],
+                    flags: MessageFlags.IsComponentsV2
             });
         });
 
@@ -180,8 +191,8 @@ module.exports = {
             console.error(err);
 
             await interaction.editReply({
-                content: `Failed to find auction house data.`,
-                components: []
+                components: [getNoListingsContainer()],
+                flags: MessageFlags.IsComponentsV2
             });
         }
     }
