@@ -1,6 +1,16 @@
 const api = require('../../src/utils/api');
 const { SlashCommandBuilder, ContainerBuilder, MessageFlags, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
+function formatMoney(number){
+    const formatted = new Intl.NumberFormat('en', { 
+        notation: 'compact',
+        compactDisplay: 'short',
+        maximumFractionDigits: 1
+        }).format(number);
+
+    return formatted;
+}
+
 async function fetchAuctionList(search,filter) {
 
     let page = 1;
@@ -19,12 +29,12 @@ async function fetchAuctionList(search,filter) {
             let pageResults = response.data.result ?? [];
             pageResults = pageResults.filter(data => data && data.item.id.includes(search))
             const formatted = pageResults.map(data =>
-                ` **${data.seller.name}** - $${data.price} - ${data.item.count}x ${
+                ` **${data.seller.name}** - $${formatMoney(data.price)} - **${data.item.count}x ${
                     data.item.id
                         .substring(data.item.id.indexOf(':') + 1)
                         .split("_")
                         .join(" ")
-                } `
+                }** - ${data.time_left}`
             );
 
             results.push(...formatted);
