@@ -1,6 +1,16 @@
 const api = require('../../src/utils/api');
 const { SlashCommandBuilder, ContainerBuilder, MessageFlags, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
+function formatGameDuration(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${hours}h ${minutes}m ${seconds}s`;
+}
+
+
 function formatMoney(number){
     const formatted = new Intl.NumberFormat('en', { 
         notation: 'compact',
@@ -34,7 +44,7 @@ async function fetchAuctionList(search,filter) {
                         .substring(data.item.id.indexOf(':') + 1)
                         .split("_")
                         .join(" ")
-                }** - ${data.time_left}`
+                }** - ${formatGameDuration(data.time_left)}`
             );
 
             results.push(...formatted);
