@@ -127,7 +127,7 @@ module.exports = {
             const message = msg.resource.message;
             const collector = message.createMessageComponentCollector({
                 filter: (i) => i.user.id === interaction.user.id,
-                time: 60_000
+                time: 120_000
             });
 
             collector.on("collect", async (i) => {
