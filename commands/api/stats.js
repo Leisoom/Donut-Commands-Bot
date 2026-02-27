@@ -57,7 +57,7 @@ module.exports = {
                     .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Brocken**: ${response.data.result.broken_blocks}`));
 
                     if(isOnline){
-                        exampleContainer.addTextDisplayComponents((td) => td.setContent(`**Location**: ${lookup.data.result.location}`))
+                        statsContainer.addTextDisplayComponents((td) => td.setContent(`**Location**: ${lookup.data.result.location}`))
                     }
 
             await interaction.reply({
