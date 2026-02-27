@@ -17,8 +17,7 @@ async function fetchAuctionList(search) {
             });
             
             let pageResults = response.data.result ?? [];
-            pageResults = pageResults.filter(res => res !== null)
-
+            pageResults = pageResults.filter(data => data && data.item.id.includes(search))
             const formatted = pageResults.map(data =>
                 ` **${data.seller.name}** - $${data.price} - ${
                     data.item.id
@@ -57,17 +56,16 @@ async function getAuctionPage(results, start, stop){
     }
     if(start + 10 > results.length){
         nextButton.setDisabled(true);
-        console.log("end")
     }
 
     const row = new ActionRowBuilder().addComponents(
-       previousButton,
+        previousButton,
         nextButton
-        );
+    );
 
     return new ContainerBuilder()
         .setAccentColor(0x0099ff)
-        .addTextDisplayComponents((textDisplay) => textDisplay.setContent("## Auction Listings"))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent("### Auction Listings"))
         .addTextDisplayComponents(...auctionTextDisplays)
         .addSeparatorComponents((seperator) => seperator)
         .addActionRowComponents(row);
