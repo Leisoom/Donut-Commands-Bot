@@ -1,7 +1,7 @@
 const api = require('../../src/utils/api');
-const { SlashCommandBuilder, ContainerBuilder, MessageFlags, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder,ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, ContainerBuilder, MessageFlags, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
-async function fetchAuctionList(search) {
+async function fetchAuctionList(search,filter) {
 
     let page = 1;
     let results = [];
@@ -11,20 +11,20 @@ async function fetchAuctionList(search) {
         try {
             const response = await api.get(`/auction/list/${page}`, {
                 data: {
-                    search: search ?? "",
-                    sort: "lowest_price"
+                    search: search,
+                    sort: filter
                 }
             });
             
             let pageResults = response.data.result ?? [];
             pageResults = pageResults.filter(data => data && data.item.id.includes(search))
             const formatted = pageResults.map(data =>
-                ` **${data.seller.name}** - $${data.price} - ${
+                ` **${data.seller.name}** - $${data.price} - ${data.item.count}x ${
                     data.item.id
                         .substring(data.item.id.indexOf(':') + 1)
                         .split("_")
                         .join(" ")
-                }`
+                } `
             );
 
             results.push(...formatted);
@@ -35,22 +35,37 @@ async function fetchAuctionList(search) {
             hasResults = false;
         }
     }
-
     return results;
 }
 
-async function getAuctionPage(results, start, stop, pageNumber){
+async function getAuctionPage(results, start, stop, pageNumber, filter){
     const auctionTextDisplays = results.map((res) => new TextDisplayBuilder().setContent(res)).slice(start,stop)
     const maxPageNumber = Math.ceil(results.length / 10)
 
     const previousButton = new ButtonBuilder()
-            .setCustomId("previous_page")
-            .setLabel("Previous Page")
-            .setStyle(ButtonStyle.Primary);
+        .setCustomId("previous_page")
+        .setLabel("Previous Page")
+        .setStyle(ButtonStyle.Primary);
+
     const nextButton = new ButtonBuilder()
-            .setCustomId("next_page")
-            .setLabel("Next Page")
-            .setStyle(ButtonStyle.Primary)
+        .setCustomId("next_page")
+        .setLabel("Next Page")
+        .setStyle(ButtonStyle.Primary)
+
+    let arrayChoices = [              
+        { label: "Lowest Price", value: "lowest_price", default: "lowest_price" === filter ? true : false },
+        { label: "Highest Price", value: "highest_price", default: "highest_price" === filter ? true : false },
+        { label: "Recently Listed", value: "recently_listed", default: "recently_listed" === filter ? true : false },
+        { label: "Last Listed", value: "last_listed", default: "last_listed" === filter ? true : false }
+    ]
+
+    const selectRow = new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+            .setCustomId("sort_filter")
+            .addOptions(
+                arrayChoices
+            )
+    );
 
     if(start === 0 && stop == 10){
         previousButton.setDisabled(true);
@@ -69,7 +84,9 @@ async function getAuctionPage(results, start, stop, pageNumber){
         .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`### Auction Listings - Page ${pageNumber} of ${maxPageNumber}`))
         .addTextDisplayComponents(...auctionTextDisplays)
         .addSeparatorComponents((seperator) => seperator)
-        .addActionRowComponents(row);
+        .addActionRowComponents(row)
+        .addSeparatorComponents((seperator) => seperator)
+        .addActionRowComponents(selectRow);
 }
 
 module.exports = {
@@ -83,7 +100,10 @@ module.exports = {
         let start = 0;
         let stop = 10;
         let pageNumber = 1;
-        const auctionResults = await fetchAuctionList(search);
+        let filter = "lowest_price";
+        let resort = false;
+        let auctionResults = await fetchAuctionList(search, filter);
+
         try {
 
             const auctionContainer = await getAuctionPage(auctionResults, start, stop, pageNumber);
@@ -111,8 +131,19 @@ module.exports = {
                     start = start - 10;
                     pageNumber--;
                 }
+                else if(i.customId === "sort_filter"){
+                    start = 0;
+                    stop = 10;
+                    pageNumber = 1;
+                    filter = i.values[0]
+                    resort = true;
+                }
 
-                const newPage = await getAuctionPage(auctionResults, start, stop, pageNumber);
+                if(resort){
+                    auctionResults = await fetchAuctionList(search, filter);
+                }
+
+                const newPage = await getAuctionPage(auctionResults, start, stop, pageNumber, filter);
 
                 await i.update({
                     components: [newPage],
