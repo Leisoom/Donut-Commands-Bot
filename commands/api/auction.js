@@ -1,37 +1,68 @@
 const api = require('../../src/utils/api');
 const { SlashCommandBuilder, ContainerBuilder, MessageFlags, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder,ButtonStyle } = require('discord.js');
 
-async function getAuctionPage(search, number){
-    const response = await api.get(`/auction/list/${number + 1}`,
-        {
-            data: {
-            search: `${search}`,
-            sort: "lowest_price"
-            }
+async function fetchAuctionList(search) {
+
+    let page = 1;
+    let results = [];
+    let hasResults = true;
+
+    while (hasResults) {
+        try {
+            const response = await api.get(`/auction/list/${page}`, {
+                data: {
+                    search: search ?? "",
+                    sort: "lowest_price"
+                }
+            });
+            
+            let pageResults = response.data.result ?? [];
+            pageResults = pageResults.filter(res => res !== null)
+
+            const formatted = pageResults.map(data =>
+                ` **${data.seller.name}** - $${data.price} - ${
+                    data.item.id
+                        .substring(data.item.id.indexOf(':') + 1)
+                        .split("_")
+                        .join(" ")
+                }`
+            );
+
+            results.push(...formatted);
+            page++;
+
+        } catch (err) {
+            console.error("Auction fetch error:", err.message);
+            hasResults = false;
         }
-    );
+    }
 
-    const auctionListings = response.data.result
-        .map(data => ` **${data.seller.name}** - $${data.price} - ${data.item.id.substring(data.item.id.indexOf(':') + 1).split("_").join(" ")}`)
+    return results;
+}
 
-    const auctionTextDisplays = auctionListings.map((al) => new TextDisplayBuilder().setContent(al)).slice(0,20)
+async function getAuctionPage(results, start, stop){
+    const auctionTextDisplays = results.map((res) => new TextDisplayBuilder().setContent(res)).slice(start,stop)
 
-    const previousButton =  new ButtonBuilder()
+    const previousButton = new ButtonBuilder()
             .setCustomId("previous_page")
             .setLabel("Previous Page")
             .setStyle(ButtonStyle.Primary);
+    const nextButton = new ButtonBuilder()
+            .setCustomId("next_page")
+            .setLabel("Next Page")
+            .setStyle(ButtonStyle.Primary)
 
-    if(number === 1){
+    if(start === 0 && stop == 10){
         previousButton.setDisabled(true);
+    }
+    if(start + 10 > results.length){
+        nextButton.setDisabled(true);
+        console.log("end")
     }
 
     const row = new ActionRowBuilder().addComponents(
        previousButton,
-
-        new ButtonBuilder()
-            .setCustomId("next_page")
-            .setLabel("Next Page")
-            .setStyle(ButtonStyle.Primary)
+        nextButton
         );
 
     return new ContainerBuilder()
@@ -50,16 +81,19 @@ module.exports = {
 
     async execute(interaction) {
         const search = interaction.options.getString('search');
-
+        let start = 0;
+        let stop = 10;
+        const auctionResults = await fetchAuctionList(search);
         try {
-            const auctionContainer = await getAuctionPage(search, 1);
+
+            const auctionContainer = await getAuctionPage(auctionResults, start, stop);
+
             const msg = await interaction.reply({
                 components: [auctionContainer],
                 flags: MessageFlags.IsComponentsV2,
                 withResponse: true
             });
 
-            let currentPage = 1;
             const message = msg.resource.message;
             const collector = message.createMessageComponentCollector({
                 filter: (i) => i.user.id === interaction.user.id,
@@ -68,13 +102,16 @@ module.exports = {
 
             collector.on("collect", async (i) => {
                 if (i.customId === "next_page") {
-                    currentPage++;
+                    start = stop;
+                    stop = stop + 10;
                 } 
                 else if (i.customId === "previous_page") {
-                    currentPage--;
+                    stop = start;
+                    start = start - 10;
+
                 }
 
-                const newPage = await getAuctionPage(search, currentPage);
+                const newPage = await getAuctionPage(auctionResults, start, stop);
 
                 await i.update({
                     components: [newPage],
