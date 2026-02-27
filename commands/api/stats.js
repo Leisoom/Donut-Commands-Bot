@@ -2,6 +2,27 @@ const api = require('../../src/utils/api');
 const { SlashCommandBuilder, ContainerBuilder, MessageFlags } = require('discord.js');
 const axios = require('axios');
 
+function formatGameDuration(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
+
+function formatMoney(number){
+    const formatted = new Intl.NumberFormat('en', { 
+        notation: 'compact',
+        compactDisplay: 'short',
+        maximumFractionDigits: 1
+        }).format(number);
+
+    return formatted;
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('stats')
@@ -47,13 +68,13 @@ module.exports = {
                                 .setDescription(`${user}'s avatar`)
                         )) 
                     .addSeparatorComponents((seperator) => seperator)
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: ${response.data.result.playtime}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: ${formatGameDuration(response.data.result.playtime)}`))
                     .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Kills**: ${response.data.result.kills}`))
                     .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Deaths**: ${response.data.result.deaths}`))
                     .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Mobs Killed**: ${response.data.result.mobs_killed}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: ${response.data.result.money_made_from_sell}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: ${response.data.result.money_spent_on_shop}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed_Blocks**: ${response.data.result.placed_blocks}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: ${formatMoney(response.data.result.money_made_from_sell)}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: ${formatMoney(response.data.result.money_spent_on_shop)}`))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed Blocks**: ${response.data.result.placed_blocks}`))
                     .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Brocken**: ${response.data.result.broken_blocks}`));
 
                     if(isOnline){

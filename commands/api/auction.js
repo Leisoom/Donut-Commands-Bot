@@ -1,5 +1,5 @@
 const api = require('../../src/utils/api');
-const { SlashCommandBuilder, ContainerBuilder, MessageFlags, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { SlashCommandBuilder, ContainerBuilder, MessageFlags, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message } = require('discord.js');
 
 function formatGameDuration(ms) {
     const totalSeconds = Math.floor(ms / 1000);
@@ -9,7 +9,6 @@ function formatGameDuration(ms) {
 
     return `${hours}h ${minutes}m ${seconds}s`;
 }
-
 
 function formatMoney(number){
     const formatted = new Intl.NumberFormat('en', { 
@@ -113,69 +112,76 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('auction')
         .setDescription('fetch auction house results')
-	    .addStringOption((option) => option.setName('search').setDescription('search term for AH').setRequired(true)),
+        .addStringOption((option) => option.setName('search').setDescription('search term for AH').setRequired(true)),
 
     async execute(interaction) {
-        const search = interaction.options.getString('search');
-        let start = 0;
-        let stop = 10;
-        let pageNumber = 1;
-        let filter = "lowest_price";
-        let resort = false;
-        let auctionResults = await fetchAuctionList(search, filter);
+
+    await interaction.deferReply({
+        flags: MessageFlags.IsComponentsV2
+    });
+
+    const search = interaction.options.getString('search').split(" ").join("_");
+
+    let start = 0;
+    let stop = 10;
+    let pageNumber = 1;
+    let filter = "lowest_price";
+    let resort = false;
 
         try {
 
+            let auctionResults = await fetchAuctionList(search, filter);
             const auctionContainer = await getAuctionPage(auctionResults, start, stop, pageNumber);
 
-            const msg = await interaction.reply({
+            const msg = await interaction.editReply({
                 components: [auctionContainer],
-                flags: MessageFlags.IsComponentsV2,
-                withResponse: true
+                flags: MessageFlags.IsComponentsV2
             });
 
-            const message = msg.resource.message;
-            const collector = message.createMessageComponentCollector({
+            const collector = msg.createMessageComponentCollector({
                 filter: (i) => i.user.id === interaction.user.id,
                 time: 120_000
             });
 
             collector.on("collect", async (i) => {
-                if (i.customId === "next_page") {
-                    start = stop;
-                    stop = stop + 10;
-                    pageNumber++;
-                } 
-                else if (i.customId === "previous_page") {
-                    stop = start;
-                    start = start - 10;
-                    pageNumber--;
-                }
-                else if(i.customId === "sort_filter"){
-                    start = 0;
-                    stop = 10;
-                    pageNumber = 1;
-                    filter = i.values[0]
-                    resort = true;
-                }
 
-                if(resort){
-                    auctionResults = await fetchAuctionList(search, filter);
-                }
+            if (i.customId === "next_page") {
+                start = stop;
+                stop += 10;
+                pageNumber++;
+            } 
+            else if (i.customId === "previous_page") {
+                stop = start;
+                start -= 10;
+                pageNumber--;
+            }
+            else if (i.customId === "sort_filter") {
+                start = 0;
+                stop = 10;
+                pageNumber = 1;
+                filter = i.values[0];
+                resort = true;
+            }
 
-                const newPage = await getAuctionPage(auctionResults, start, stop, pageNumber, filter);
+            if (resort) {
+                auctionResults = await fetchAuctionList(search, filter);
+                resort = false;
+            }
 
-                await i.update({
-                    components: [newPage],
-                    flags: MessageFlags.IsComponentsV2
-                });
+            const newPage = await getAuctionPage(auctionResults, start, stop, pageNumber, filter);
+
+            await i.update({
+                components: [newPage],
+                flags: MessageFlags.IsComponentsV2
             });
-        }
-        catch(err){
+        });
+
+        } catch (err) {
             console.error(err);
-            await interaction.reply({
-                content: `Failed to find aunction house data.`,
-                ephemeral: true
+
+            await interaction.editReply({
+                content: `Failed to find auction house data.`,
+                components: []
             });
         }
     }
