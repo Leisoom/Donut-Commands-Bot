@@ -64,41 +64,43 @@ function getNoListingsContainer(search){
         .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`Search: ${search}`))
 }
 
-function getAuctionPage(results, start, stop, pageNumber, filter){
-    const auctionTextDisplays = results.map((res) => new TextDisplayBuilder().setContent(res)).slice(start,stop)
-    const maxPageNumber = Math.ceil(results.length / 10)
+function getAuctionPage(results, start, stop, pageNumber, filter, loading = false) {
+    const auctionTextDisplays = results
+        .map((res) => new TextDisplayBuilder().setContent(res))
+        .slice(start, stop);
+
+    const maxPageNumber = Math.ceil(results.length / 10) || 1;
 
     const previousButton = new ButtonBuilder()
         .setCustomId("previous_page")
         .setLabel("Previous Page")
-        .setStyle(ButtonStyle.Primary);
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(loading);
 
     const nextButton = new ButtonBuilder()
         .setCustomId("next_page")
         .setLabel("Next Page")
         .setStyle(ButtonStyle.Primary)
+        .setDisabled(loading);
 
-    let arrayChoices = [              
-        { label: "Lowest Price", value: "lowest_price", default: "lowest_price" === filter ? true : false },
-        { label: "Highest Price", value: "highest_price", default: "highest_price" === filter ? true : false },
-        { label: "Recently Listed", value: "recently_listed", default: "recently_listed" === filter ? true : false },
-        { label: "Last Listed", value: "last_listed", default: "last_listed" === filter ? true : false }
-    ]
-
-    const selectRow = new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder()
-            .setCustomId("sort_filter")
-            .addOptions(
-                arrayChoices
-            )
-    );
-
-    if(start === 0 && stop == 10){
-        previousButton.setDisabled(true);
+    if (!loading) {
+        if (start === 0) previousButton.setDisabled(true);
+        if (start + 10 >= results.length) nextButton.setDisabled(true);
     }
-    if(start + 10 > results.length){
-        nextButton.setDisabled(true);
-    }
+
+    const arrayChoices = [
+        { label: "Lowest Price", value: "lowest_price", default: filter === "lowest_price" },
+        { label: "Highest Price", value: "highest_price", default: filter === "highest_price" },
+        { label: "Recently Listed", value: "recently_listed", default: filter === "recently_listed" },
+        { label: "Last Listed", value: "last_listed", default: filter === "last_listed" }
+    ];
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId("sort_filter")
+        .addOptions(arrayChoices)
+        .setDisabled(loading);
+
+    const selectRow = new ActionRowBuilder().addComponents(selectMenu);
 
     const row = new ActionRowBuilder().addComponents(
         previousButton,
@@ -155,6 +157,14 @@ module.exports = {
             });
 
             collector.on("collect", async (i) => {
+                await i.deferUpdate();
+
+                const loadingPage = getAuctionPage(auctionResults, start, stop, pageNumber, filter, true);
+
+                await i.editReply({
+                    components: [loadingPage],
+                    flags: MessageFlags.IsComponentsV2
+                });
 
                 if (i.customId === "next_page") {
                     start = stop;
@@ -171,17 +181,12 @@ module.exports = {
                     stop = 10;
                     pageNumber = 1;
                     filter = i.values[0];
-                    resort = true;
-                }
-
-                if (resort) {
                     auctionResults = await fetchAuctionList(search, filter);
-                    resort = false;
                 }
 
-                const newPage = getAuctionPage(auctionResults, start, stop, pageNumber, filter);
+                const newPage = getAuctionPage(auctionResults, start, stop, pageNumber, filter, false);
 
-                await i.update({
+                await i.editReply({
                     components: [newPage],
                     flags: MessageFlags.IsComponentsV2
             });
