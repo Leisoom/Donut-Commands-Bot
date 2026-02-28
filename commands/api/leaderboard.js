@@ -45,16 +45,16 @@ function getLeaderboardPage(results, start, stop, pageNumber, filter, loading = 
     }
 
     const arrayChoices = [
-        { label: "Broken Blocks", value: "brokenblocks", default: filter === "lowest_price" },
-        { label: "Deaths", value: "deaths", default: filter === "highest_price" },
-        { label: "Kills", value: "kills", default: filter === "recently_listed" },
-        { label: "Mobs Killed", value: "mobskilled", default: filter === "last_listed" },
-        { label: "Money", value: "money", default: filter === "last_listed" },
-        { label: "Placed Blocks", value: "placedblocks", default: filter === "last_listed" },
-        { label: "Playtime", value: "playtime", default: filter === "last_listed" },
-        { label: "Money Made on /Sell", value: "sell", default: filter === "last_listed" },
-        { label: "Shards", value: "shards", default: filter === "last_listed" },
-        { label: "Money Spent on /Shop", value: "shop", default: filter === "last_listed" },
+        { label: "Broken Blocks", value: "brokenblocks", default: filter === "brokenblocks" },
+        { label: "Deaths", value: "deaths", default: filter === "deaths" },
+        { label: "Kills", value: "kills", default: filter === "kills" },
+        { label: "Mobs Killed", value: "mobskilled", default: filter === "lmobskilledd" },
+        { label: "Money", value: "money", default: filter === "one" },
+        { label: "Placed Blocks", value: "placedblocks", default: filter === "placedblocks" },
+        { label: "Playtime", value: "playtime", default: filter === "playtime" },
+        { label: "Money Made on /Sell", value: "sell", default: filter === "sell" },
+        { label: "Shards", value: "shards", default: filter === "shards" },
+        { label: "Money Spent on /Shop", value: "shop", default: filter === "shop" },
 
     ];
 
@@ -85,7 +85,25 @@ function getLeaderboardPage(results, start, stop, pageNumber, filter, loading = 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('leaderboard')
-        .setDescription('fetch leaderboard results'),
+        .setDescription('fetch leaderboard results')
+        .addStringOption((option) =>
+            option
+                .setName('filter')
+                .setDescription('sorting filter')
+                .setRequired(true)
+                .addChoices(
+                    { name: "Broken Blocks", value: "brokenblocks"},
+                    { name: "Deaths", value: "deaths"},
+                    { name: "Kills", value: "kills"},
+                    { name: "Mobs Killed", value: "mobskilled"},
+                    { name: "Money", value: "money"},
+                    { name: "Placed Blocks", value: "placedblocks"},
+                    { name: "Playtime", value: "playtime"},
+                    { name: "Money Made on /Sell", value: "sell"},
+                    { name: "Shards", value: "shards"},
+                    { name: "Money Spent on /Shop", value: "shop"}
+                ),
+        ),
 
     async execute(interaction) {
 
@@ -96,12 +114,12 @@ module.exports = {
         let start = 0;
         let stop = 10;
         let pageNumber = 1;
-        let filter = "money";
+        let filter = interaction.options.getString('filter');
 
         try {
 
             let leaderboardResults = await fetchLeaderboardList(filter);
-            let leaderboardPage =  getLeaderboardPage(leaderboardResults, start, stop, pageNumber);
+            let leaderboardPage =  getLeaderboardPage(leaderboardResults, start, stop, pageNumber,filter);
 
             const msg = await interaction.editReply({
                 components: [leaderboardPage],
