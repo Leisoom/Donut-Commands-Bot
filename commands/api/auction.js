@@ -135,7 +135,6 @@ module.exports = {
     let stop = 10;
     let pageNumber = 1;
     let filter = "lowest_price";
-    let resort = false;
 
         try {
 

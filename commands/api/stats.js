@@ -60,25 +60,25 @@ module.exports = {
                 .addSectionComponents(section =>
                     section
                         .addTextDisplayComponents(textDisplay => textDisplay.setContent(`### ${user} is ${playerStatus}!`))
-                        .addTextDisplayComponents(textDisplay => textDisplay.setContent(`**Balance**: ${formatted}`))
-                        .addTextDisplayComponents(textDisplay => textDisplay.setContent(`**Shards**: ${r.shards}`))
+                        .addTextDisplayComponents(textDisplay => textDisplay.setContent(`**Balance**: \`${formatted}\``))
+                        .addTextDisplayComponents(textDisplay => textDisplay.setContent(`**Shards**: \`${r.shards}\``))
                         .setThumbnailAccessory(thumbnail =>
                             thumbnail
                                 .setURL(`https://visage.surgeplay.com/face/250/${uuid}`)
                                 .setDescription(`${user}'s avatar`)
                         )) 
                     .addSeparatorComponents((seperator) => seperator)
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: ${formatGameDuration(response.data.result.playtime)}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Kills**: ${response.data.result.kills}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Deaths**: ${response.data.result.deaths}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Mobs Killed**: ${response.data.result.mobs_killed}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: ${formatMoney(response.data.result.money_made_from_sell)}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: ${formatMoney(response.data.result.money_spent_on_shop)}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed Blocks**: ${response.data.result.placed_blocks}`))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Brocken**: ${response.data.result.broken_blocks}`));
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: \`${formatGameDuration(response.data.result.playtime)}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Kills**: \`${response.data.result.kills}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Deaths**: \`${response.data.result.deaths}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Mobs Killed**: \`${response.data.result.mobs_killed}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: \`${formatMoney(response.data.result.money_made_from_sell)}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: \`${formatMoney(response.data.result.money_spent_on_shop)}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed Blocks**: \`${response.data.result.placed_blocks}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Brocken**: \`${response.data.result.broken_blocks}\``));
 
                     if(isOnline){
-                        statsContainer.addTextDisplayComponents((td) => td.setContent(`**Location**: ${lookup.data.result.location}`))
+                        statsContainer.addTextDisplayComponents((td) => td.setContent(`**Location**: \`${lookup.data.result.location}\``))
                     }
 
             await interaction.reply({
