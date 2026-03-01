@@ -113,7 +113,7 @@ function getAuctionPage(results, start, stop, pageNumber, filter, loading = fals
         .addTextDisplayComponents(...auctionTextDisplays)
         .addSeparatorComponents((seperator) => seperator)
         .addActionRowComponents(row)
-        .addSeparatorComponents((seperator) => seperator)
+        .addSeparatorComponents((seperator) => seperator.clearSpacing(true).setDivider(false))
         .addActionRowComponents(selectRow);
 }
 

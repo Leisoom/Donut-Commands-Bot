@@ -58,8 +58,6 @@ function getLeaderboardPage(results, start, stop, pageNumber, filter, loading = 
 
     ];
 
-
-    
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId("sort_filter")
         .addOptions(arrayChoices)
@@ -78,7 +76,7 @@ function getLeaderboardPage(results, start, stop, pageNumber, filter, loading = 
         .addTextDisplayComponents(...leaderboardTextRows)
         .addSeparatorComponents((seperator) => seperator)
         .addActionRowComponents(row)
-        .addSeparatorComponents((seperator) => seperator)
+        .addSeparatorComponents((seperator) => seperator.setDivider(false))
         .addActionRowComponents(selectRow);
 }
 
