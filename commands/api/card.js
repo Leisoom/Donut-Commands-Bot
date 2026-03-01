@@ -1,7 +1,8 @@
 const api = require('../../src/utils/api');
 const { SlashCommandBuilder,AttachmentBuilder } = require('discord.js');
 const axios = require('axios');
-const {createCanvas, loadImage} = require('canvas');
+const {createCanvas, loadImage, registerFont} = require('canvas');
+const path = require('node:path');
 
 
 function formatGameDuration(ms) {
@@ -68,16 +69,28 @@ module.exports = {
                 `Blocks Brocken: ${r.broken_blocks}`
             ];
 
-            ctx.fillStyle = 'black';
-            ctx.font = '55px';
+            let imagePath = path.join(__dirname, '..', '..', 'images', 'background-test.png');
+            
+            let img = await loadImage(imagePath);
+            ctx.drawImage(img, 0, 0, 1920, 1080);
+
+            registerFont(
+            path.join(__dirname, '..', '..', 'fonts', 'Minecraft.ttf'),
+            { family: 'Minecraft' }
+            );
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '55px "Minecraft"';
+
             ctx.fillText(`${user}'s statisitcs`, 100, 100);
 
             for (let i = 0; i < statsArray.length; i++) {
                 ctx.fillText(statsArray[i], 100, (i + 1) * 90 + 100)
             }
 
-            const imagePath = `https://visage.surgeplay.com/full/384/${uuid}`;
-            const img = await loadImage(imagePath);
+            imagePath = `https://visage.surgeplay.com/full/384/${uuid}`;
+
+            img = await loadImage(imagePath);
             ctx.drawImage(img, 1150, 50, 600, 950);
 
             const buffer = canvas.toBuffer('image/jpeg')
