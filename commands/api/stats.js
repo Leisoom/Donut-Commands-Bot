@@ -68,14 +68,14 @@ module.exports = {
                                 .setDescription(`${user}'s avatar`)
                         )) 
                     .addSeparatorComponents((seperator) => seperator)
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: \`${formatGameDuration(response.data.result.playtime)}\``))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Kills**: \`${response.data.result.kills}\``))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Deaths**: \`${response.data.result.deaths}\``))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Mobs Killed**: \`${response.data.result.mobs_killed}\``))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: \`${formatMoney(response.data.result.money_made_from_sell)}\``))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: \`${formatMoney(response.data.result.money_spent_on_shop)}\``))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed Blocks**: \`${response.data.result.placed_blocks}\``))
-                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Brocken**: \`${response.data.result.broken_blocks}\``));
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Playtime**: \`${formatGameDuration(r.playtime)}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Kills**: \`${r.kills}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Deaths**: \`${r.deaths}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Mobs Killed**: \`${r.mobs_killed}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Made From Sell**: \`${formatMoney(r.money_made_from_sell)}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Money Spent on Shop**: \`${formatMoney(r.money_spent_on_shop)}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Placed Blocks**: \`${r.placed_blocks}\``))
+                    .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**Blocks Brocken**: \`${r.broken_blocks}\``));
 
                     if(isOnline){
                         statsContainer.addTextDisplayComponents((td) => td.setContent(`**Location**: \`${lookup.data.result.location}\``))
